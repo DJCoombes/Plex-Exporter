@@ -60,17 +60,24 @@ EXPOSE 9595
 ENV PLEX_URL=""
 ENV PLEX_TOKEN=""
 ENV EXPORTER_PORT="9595"
-ENV SCRAPE_INTERVAL_SECONDS="60"
+ENV SCRAPE_INTERVAL_SECONDS="30"
 ENV REQUEST_TIMEOUT_SECONDS="10"
 ENV LOG_LEVEL="INFO"
 ENV PLEX_SKIP_VERIFY="false"
+ENV RATE_LIMIT_ENABLED="false"
+ENV RATE_LIMIT_MAX_CALLS="10"
+ENV RATE_LIMIT_PERIOD_SECONDS="10"
 
-# *** USER instruction removed - entrypoint runs as root initially, then drops privileges ***
-# USER $USERNAME
-
-# Add HEALTHCHECK instruction
+# Update HEALTHCHECK to use the /health endpoint
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -q --spider http://localhost:9595/metrics || exit 1
+  CMD wget -q -O - http://localhost:9595/health || exit 1
+
+# Add metadata labels
+LABEL org.opencontainers.image.title="Plex Prometheus Exporter" \
+      org.opencontainers.image.description="A Prometheus exporter for Plex Media Server metrics" \
+      org.opencontainers.image.source="https://github.com/djcoombes/plex-exporter" \
+      org.opencontainers.image.licenses="GPL-3.0" \
+      maintainer="DJ Coombes <contact@djcoombes.com>"
 
 # Set the entrypoint script to run on container start
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
